@@ -1,10 +1,14 @@
-class AdminPage {
-  sytemUsersFilter(labelText, text) {
-    cy.get('label')
+class UserManagementPage {
+  getLabelByText(text) {
+    return cy
+      .get('label')
       .filter(
-        (_, el) =>
-          el.textContent.trim().toLowerCase() === labelText.toLowerCase()
-      )
+        (_, el) => el.textContent.trim().toLowerCase() === text.toLowerCase()
+      );
+  }
+
+  sytemUsersFilter(labelText, text) {
+    this.getLabelByText(labelText)
       .closest('.oxd-grid-item.oxd-grid-item--gutters')
       .find('input')
       .then(($input) => {
@@ -14,11 +18,7 @@ class AdminPage {
   }
 
   sytemUsersDropdownFilter(labelText, optionText) {
-    cy.get('label')
-      .filter(
-        (_, el) =>
-          el.textContent.trim().toLowerCase() === labelText.toLowerCase()
-      )
+    this.getLabelByText(labelText)
       .closest('.oxd-grid-item.oxd-grid-item--gutters')
       .find('.oxd-select-wrapper')
       .click();
@@ -26,11 +26,7 @@ class AdminPage {
   }
 
   systemUsersAutoCompleteFilter(labelText, optionText) {
-    cy.get('label')
-      .filter(
-        (_, el) =>
-          el.textContent.trim().toLowerCase() === labelText.toLowerCase()
-      )
+    this.getLabelByText(labelText)
       .closest('.oxd-grid-item.oxd-grid-item--gutters')
       .find('input')
       .then(($input) => {
@@ -38,16 +34,32 @@ class AdminPage {
       })
       .type(optionText);
 
-    // Refined selector and wait for visibility
     cy.get('.oxd-autocomplete-dropdown')
       .find('span')
       .should('be.visible')
       .contains(optionText)
       .click();
   }
+
+  validateSystemUsersTable(values) {
+    const columnIndices = [1, 2, 3, 4];
+    const columnValues = [
+      values.username,
+      values.userRole,
+      values.employeeName,
+      values.status,
+    ];
+
+    cy.get('.oxd-table-row.oxd-table-row--with-border', {timeout: 15000}).then(($cells) => {
+      columnIndices.forEach((index, i) => {
+        expect($cells).to.be.visible;
+        expect($cells).to.contain(columnValues[i]);
+      });
+    });
+  }
 }
 
-const adminPage = new AdminPage();
+const userManagementPage = new UserManagementPage();
 
 describe('System Users Filter', () => {
   beforeEach(() => {
@@ -55,22 +67,55 @@ describe('System Users Filter', () => {
   });
 
   it('filter dengan data yang valid', () => {
-    adminPage.sytemUsersFilter('username', 'Pappu');
-    adminPage.sytemUsersDropdownFilter('user role', 'Admin');
-    adminPage.systemUsersAutoCompleteFilter('employee name', 'Odis Adalwin');
-    adminPage.sytemUsersDropdownFilter('status', 'Enabled');
-    cy.get('[type="submit"]').click();
+    cy.fixture('userData').then((data) => {
+      userManagementPage.sytemUsersFilter('username', data.checkUser.username);
+      userManagementPage.sytemUsersDropdownFilter(
+        'user role',
+        data.checkUser.userRole
+      );
+      userManagementPage.systemUsersAutoCompleteFilter(
+        'employee name',
+        data.checkUser.employeeName
+      );
+      userManagementPage.sytemUsersDropdownFilter(
+        'status',
+        data.checkUser.status
+      );
+      cy.get('[type="submit"]').click();
+
+      userManagementPage.validateSystemUsersTable({
+        username: data.checkUser.username,
+        userRole: data.checkUser.userRole,
+        employeeName: data.checkUser.employeeName,
+        status: data.checkUser.status,
+      });
+    });
   });
+
   it('filter dengan data yang invalid', () => {
-    adminPage.sytemUsersFilter('username', 'naveen6541');
-    adminPage.sytemUsersDropdownFilter('user role', 'ESS');
-    adminPage.systemUsersAutoCompleteFilter('employee name', 'Rahul Das');
-    adminPage.sytemUsersDropdownFilter('status', 'Disabled');
+    userManagementPage.sytemUsersFilter('username', 'naveen6541');
+    userManagementPage.sytemUsersDropdownFilter('user role', 'ESS');
+    userManagementPage.systemUsersAutoCompleteFilter(
+      'employee name',
+      'Rahul Das'
+    );
+    userManagementPage.sytemUsersDropdownFilter('status', 'Disabled');
     cy.get('[type="submit"]').click();
+    cy.get('span').contains('No Records Found');
   });
+
+  it('reset filter', () => {
+    userManagementPage.sytemUsersFilter('username', 'naveen6541');
+    userManagementPage.sytemUsersDropdownFilter('user role', 'ESS');
+    userManagementPage.systemUsersAutoCompleteFilter(
+      'employee name',
+      'Rahul Das'
+    );
+    userManagementPage.sytemUsersDropdownFilter('status', 'Disabled');
+    cy.get('[type="button"]').contains('Reset').click();
+  });
+
   it('filter dengan data yang kosong', () => {
     cy.get('[type="submit"]').click();
   });
 });
-
-// <div role="listbox" class="oxd-autocomplete-dropdown --positon-bottom" data-v-3ebc98ba="" data-v-390abb6d=""><div role="option" class="oxd-autocomplete-option" data-v-da59eaf4="" data-v-390abb6d=""><span data-v-08ed484c="">Odis  Adalwin</span><!----><!----></div></div>

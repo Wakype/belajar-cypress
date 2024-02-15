@@ -1,0 +1,17 @@
+{
+  "username": "Admin",
+  "password": "admin123",
+  "checkUser": {
+    "username": "Admin",
+    "userRole": "Admin",
+    "employeeName": "Bob Tester",
+    "status": "Enabled"
+  },
+  "createUser": {
+    "username": "callista",
+    "userRole": "Admin",
+    "employeeName": "Bob Tester",
+    "status": "Enabled",
+    "password": "wakype123"
+  }
+}

@@ -25,14 +25,13 @@
 // Cypress.Commands.overwrite('visit', (originalFn, url, options) => { ... })
 
 // commands.js
-Cypress.Commands.add(
-  'loginAsUser',
-  (goto = '', username = 'Admin', password = 'admin123') => {
-    cy.visit('/web/index.php/auth/login').then(() => {
-      cy.get('[name="username"]').type(username);
-      cy.get('[name="username"]').should('have.value', username);
-      cy.get('[name="password"]').type(password);
-      cy.get('[name="password"]').should('have.value', password);
+Cypress.Commands.add('loginAsUser', (goto = '') => {
+  cy.visit('/web/index.php/auth/login').then(() => {
+    cy.fixture('userData').then((data) => {
+      cy.get('[name="username"]').type(data.username);
+      cy.get('[name="username"]').should('have.value', data.username);
+      cy.get('[name="password"]').type(data.password);
+      cy.get('[name="password"]').should('have.value', data.password);
       cy.get('[type="submit"]').click();
 
       if (goto !== '') {
@@ -41,5 +40,5 @@ Cypress.Commands.add(
           .click();
       }
     });
-  }
-);
+  });
+});
